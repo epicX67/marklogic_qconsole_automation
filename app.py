@@ -25,6 +25,7 @@ class Log:
     FAIL = '\033[91m'
     ENDC = '\033[0m'
     BOLD = '\033[1m'
+    PASS = '\033[92m'
 
     @staticmethod
     def info(msg):
@@ -262,18 +263,20 @@ def main(db1, db2, search):
         }
     })
 
-    MLCLI.select_database(db1)
-    subDBFiles = MLCLI.search(search)
+    subDBFiles = []
     subDBFileData = []
+    if MLCLI.select_database(db1):
+        subDBFiles = MLCLI.search(search)
 
     for file in subDBFiles:
         nFile = MLCLI.get_file(file)
         if nFile != None:
             subDBFileData.append(nFile)
 
-    MLCLI.select_database(db2)
-    finalDBFiles = MLCLI.search(search)
+    finalDBFiles = []
     finalDBFileData = []
+    if MLCLI.select_database(db2):
+        finalDBFiles = MLCLI.search(search)
 
     for file in finalDBFiles:
         nFile = MLCLI.get_file(file)
@@ -300,7 +303,7 @@ def main(db1, db2, search):
                 print(
                     f'Comparing file [{file["fileName"]}] from both database')
                 print(
-                    f"Comparing public id of both xmls. [{'Passed' if publicId == publicId2 else 'failed'}]"
+                    f"Comparing public id of both xmls. [{Log.PASS + 'Passed' + Log.ENDC if publicId == publicId2 else Log.FAIL + 'failed' + Log.ENDC}]"
                 )
 
                 if publicId != publicId2:
@@ -310,8 +313,9 @@ def main(db1, db2, search):
                 break
 
         if not found:
-            print(f"File [{file['fileName']}] not exists on FinalDB")
+            print(
+                f"File [{Log.FAIL + file['fileName'] + Log.ENDC}] not exists on FinalDB")
 
 
 # start point
-main("SubDB", "FinalDB", "faf")
+main("SubDB", "FinalDB", "/claim*")
