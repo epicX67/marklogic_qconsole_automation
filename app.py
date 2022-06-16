@@ -10,6 +10,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait as wait
 from selenium.webdriver.support import expected_conditions as EC
 
+os.system('color')
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 load_dotenv()
 HEADLESS = True if os.getenv("HEADLESS") == "True" else False
@@ -20,6 +21,10 @@ URL = os.getenv("ML_CONSOLE_URL")
 
 
 class Log:
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
 
     @staticmethod
     def info(msg):
@@ -27,7 +32,11 @@ class Log:
 
     @staticmethod
     def err(msg):
-        print(f"ML_CLI Error :: {msg}")
+        print(f"{Log.FAIL}ML_CLI Error :: {msg}{Log.ENDC}")
+
+    @staticmethod
+    def warn(msg):
+        print(f"{Log.WARNING}ML_CLI Warn  :: {msg}{Log.ENDC}")
 
 
 class MarkLogicQConsole:
@@ -181,7 +190,7 @@ class MarkLogicQConsole:
         )
 
         if len(files) == 0:
-            Log.info(f"No match found for this search [{search}]")
+            Log.warn(f"No match found for this search [{search}]")
             return []
 
         # Clearing previous search results
@@ -304,5 +313,5 @@ def main(db1, db2, search):
             print(f"File [{file['fileName']}] not exists on FinalDB")
 
 
-#start point
+# start point
 main("SubDB", "FinalDB", "faf")
