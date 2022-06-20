@@ -1,5 +1,6 @@
 import os
 import warnings
+import yaml
 
 from dotenv import load_dotenv
 from lxml import etree
@@ -12,12 +13,21 @@ from selenium.webdriver.support import expected_conditions as EC
 
 os.system('color')
 warnings.filterwarnings("ignore", category=DeprecationWarning)
-load_dotenv()
-HEADLESS = True if os.getenv("HEADLESS") == "True" else False
-SIMULATE_SLOWNESS = True if os.getenv("SIMULATE_SLOWNESS") == "True" else False
-WEBDRIVER = os.getenv("WEBDRIVER")
-BROWSER = os.getenv("BROWSER")
-URL = os.getenv("ML_CONSOLE_URL")
+env_file = open(os.path.dirname(
+    os.path.realpath(__file__)) + r"/env.yaml", "r")
+env = yaml.safe_load(env_file)
+
+HEADLESS = env.get("HEADLESS") if env.get("HEADLESS") != None else False
+SIMULATE_SLOWNESS = env.get("SIMULATE_SLOWNESS") if env.get(
+    "SIMULATE_SLOWNESS") != None else False
+WEBDRIVER = env.get("WEBDRIVER") if env.get("WEBDRIVER") != None else "driver/"
+BROWSER = env.get("BROWSER") if env.get("BROWSER") != None else "CHROME"
+URL = env.get("ML_CONSOLE_URL") if env.get(
+    "ML_CONSOLE_URL") != None else "http://localhost:8000"
+USERNAME = env.get("DB_USERNAME") if env.get("DB_USERNAME") != None else "xxxx"
+PASSWORD = env.get("DB_PASSWORD") if env.get("DB_PASSWORD") != None else "xxxx"
+NS_KEY = env.get("NS_KEY") if env.get("NS_KEY") != None else "xxxx"
+NS = env.get("NS") if env.get("NS") != None else "xxxx"
 
 
 class Log:
@@ -258,8 +268,8 @@ def main(db1, db2, search):
         "BROWSER": BROWSER,
         "URL": URL,
         "USER": {
-            "USERNAME": os.getenv("DB_USERNAME"),
-            "PASSWORD": os.getenv("DB_PASSWORD")
+            "USERNAME": USERNAME,
+            "PASSWORD": PASSWORD
         }
     })
 
@@ -285,7 +295,7 @@ def main(db1, db2, search):
 
     MLCLI.close()
 
-    ns = {os.getenv("NS_KEY"): os.getenv("NS")}
+    ns = {NS_KEY: NS}
 
     for file in subDBFileData:
 
