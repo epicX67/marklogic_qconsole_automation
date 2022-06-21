@@ -1,9 +1,11 @@
 import os
+import time
 import warnings
 import yaml
 
 from dotenv import load_dotenv
 from lxml import etree
+import pandas as pd
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -259,6 +261,62 @@ class MarkLogicQConsole:
         return None
 
 
+class Report:
+    def __init__(self):
+        self.fileName = []
+        self.exists_on_db1 = []
+        self.exists_on_db2 = []
+        self.target = []
+        self.expected = []
+        self.got = []
+        self.status = []
+        self.reason = []
+        pass
+
+    def push(self, fileName, db1, db2, target, expected, got):
+        self.fileName.append(fileName)
+        self.exists_on_db1.append("Yes" if db1 else "No")
+        self.exists_on_db2.append("Yes" if db2 else "No")
+        self.target.append(target)
+        self.expected.append(expected)
+        self.got.append(got)
+
+        reason = ""
+        status = True
+
+        if not db1:
+            reason = "File Not found on first DB"
+            status = False
+
+        if not db2:
+            reason = "File Not found on second DB"
+            status = False
+
+        if expected != got:
+            reason = "Different value in both files"
+            status = False
+
+        self.status.append("Passed" if status else "Failed")
+        self.reason.append(reason)
+
+    def extract(self, path):
+        preDf = {
+            "File Name": self.fileName,
+            "Exists (DB1)": self.exists_on_db1,
+            "Exists (DB2)": self.exists_on_db2,
+            "Target": self.target,
+            "Expected": self.expected,
+            "Got": self.got,
+            "Status": self.status,
+            "Reason": self.reason
+        }
+
+        df = pd.DataFrame(preDf)
+        writer = pd.ExcelWriter(path, engine='xlsxwriter')
+        df.to_excel(writer, index=False)
+        writer.close()
+
+
 def main(db1, db2, search):
     # driver.maximize_window()
     MLCLI = MarkLogicQConsole({
@@ -297,6 +355,8 @@ def main(db1, db2, search):
 
     ns = {NS_KEY: NS}
 
+    report = Report()
+
     for file in subDBFileData:
 
         found = False
@@ -307,9 +367,10 @@ def main(db1, db2, search):
                 # Compare XML
                 XML1 = file["xml"]
                 XML2 = fFile["xml"]
+                target = ".//claim:PublicId"
 
-                publicId = XML1.findall(".//claim:PublicId", ns)[0].text
-                publicId2 = XML2.findall(".//claim:PublicId", ns)[0].text
+                publicId = XML1.findall(target, ns)[0].text
+                publicId2 = XML2.findall(target, ns)[0].text
                 print(
                     f'Comparing file [{file["fileName"]}] from both database')
                 print(
@@ -320,11 +381,19 @@ def main(db1, db2, search):
                     print(
                         f'Expected value :: [{publicId}]\t\tGot :: [{publicId2}]'
                     )
-                break
+
+                report.push(file["fileName"], True, True,
+                            target, publicId, publicId2)
 
         if not found:
             print(
                 f"File [{Log.FAIL + file['fileName'] + Log.ENDC}] not exists on FinalDB")
+
+            report.push(file["fileName"], True, False,
+                        "", "", "")
+
+    timestamp = time.strftime('_%m-%d-%Y_%H%M', time.localtime())
+    report.extract(f"report{timestamp}.xlsx")
 
 
 # start point
