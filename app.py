@@ -104,7 +104,7 @@ class MarkLogicQConsole:
 
         if configs["SIMULATE_SLOWNESS"]:
             driver.set_network_conditions(offline=False,
-                                          latency=900,
+                                          latency=100,
                                           download_throughput=500 * 1024,
                                           upload_throughput=500 * 1024)
 
@@ -154,16 +154,18 @@ class MarkLogicQConsole:
         return
 
     def select_database(self, database):
+        db_elem = f'//*[@id="source-databases"]/option[text() = "{database}"]'
         if not self.is_active():
             return
         db = None
         try:
             wait(self.driver, 5).until(
-                EC.presence_of_element_located(
-                    (By.XPATH, '//*[@id="source-databases"]/option')))
+                EC.element_to_be_clickable(
+                    (By.XPATH, db_elem)))
             db = self.driver.find_element_by_xpath(
-                f'//*[@id="source-databases"]/option[text() = "{database}"]')
-        except Exception:
+                db_elem)
+        except Exception as e:
+            print(e)
             Log.err(f"Database [{database}] is not available")
             return False
         else:
