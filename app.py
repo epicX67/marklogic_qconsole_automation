@@ -162,8 +162,8 @@ class MarkLogicQConsole:
             wait(self.driver, 5).until(
                 EC.element_to_be_clickable(
                     (By.XPATH, db_elem)))
-            db = self.driver.find_element_by_xpath(
-                db_elem)
+            db = self.driver.find_element(By.XPATH,
+                                          db_elem)
         except Exception as e:
             print(e)
             Log.err(f"Database [{database}] is not available")
@@ -178,8 +178,8 @@ class MarkLogicQConsole:
             return False
 
         try:
-            explore_btn = self.driver.find_element_by_xpath(
-                '//*[@id="explore-source-btn"]')
+            explore_btn = self.driver.find_element(By.XPATH,
+                                                   '//*[@id="explore-source-btn"]')
             explore_btn.click()
             self.wait_till_busy()
             return True
@@ -193,16 +193,16 @@ class MarkLogicQConsole:
         self.explore()
         wait(self.driver, 1)
 
-        search_input = self.driver.find_element_by_xpath(
-            '//*[@id="filter-by-uri-input"]')
+        search_input = self.driver.find_element(By.XPATH,
+                                                '//*[@id="filter-by-uri-input"]')
         search_input.send_keys(search)
         search_input.send_keys(Keys.ENTER)
         self.wait_till_busy()
         wait(self.driver, 1)
 
-        files = self.driver.find_elements_by_xpath(
-            '//*[@id="explore-results-space"]/table/tbody/tr[not(@class="results-header")]/td[2]/a'
-        )
+        files = self.driver.find_elements(By.XPATH,
+                                          '//*[@id="explore-results-space"]/table/tbody/tr[not(@class="results-header")]/td[2]/a'
+                                          )
 
         if len(files) == 0:
             Log.warn(f"No match found for this search [{search}]")
@@ -218,9 +218,9 @@ class MarkLogicQConsole:
         return ret
 
     def get_result_list(self):
-        files = self.driver.find_elements_by_xpath(
-            '//*[@id="explore-results-space"]/table/tbody/tr[not(@class="results-header")]/td[2]/a'
-        )
+        files = self.driver.find_elements(By.XPATH,
+                                          '//*[@id="explore-results-space"]/table/tbody/tr[not(@class="results-header")]/td[2]/a'
+                                          )
 
         return files
 
@@ -247,9 +247,9 @@ class MarkLogicQConsole:
                     print(e)
                     return None
 
-                textData = self.driver.find_element_by_xpath(
-                    '//div[@id="explore-file-doc"]/*/*[@class="resultItem"]/*/*/code'
-                )
+                textData = self.driver.find_element(By.XPATH,
+                                                    '//div[@id="explore-file-doc"]/*/*[@class="resultItem"]/*/*/code'
+                                                    )
                 RAW = textData.text
 
                 # Going Back
