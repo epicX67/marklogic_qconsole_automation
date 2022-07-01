@@ -10,8 +10,12 @@ import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait as wait
 from selenium.webdriver.support import expected_conditions as EC
+
+# For clipboard access
+from tkinter import Tk
 
 os.system('color')
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -262,6 +266,58 @@ class MarkLogicQConsole:
         Log.err(f'File [{fileName}] not found')
         return None
 
+    # New method to get data
+    def get_file_n(self, fileName):
+        self.files = self.get_result_list()
+
+        for file in self.files:
+            if file.text == fileName:
+                Log.info(f'File [{fileName}] found')
+                file.click()
+
+                # Render as text
+                try:
+                    wait(self.driver, 5).until(
+                        EC.element_to_be_clickable(
+                            (By.ID, 'explore-edit-doc-btn'))
+                    )
+
+                    self.driver.find_element(
+                        By.ID,
+                        'explore-edit-doc-btn'
+                    ).click()
+
+                    wait(self.driver, 10).until(
+                        EC.visibility_of_element_located(
+                            (By.XPATH, '//*[@id="explore-file-doc"]/div//*[@class="CodeMirror-lines"]')))
+
+                except Exception as e:
+                    print(e)
+                    return None
+
+                ac = ActionChains(self.driver)
+                ac.key_down(Keys.CONTROL).send_keys(
+                    'a').key_up(Keys.CONTROL).perform()
+                ac.key_down(Keys.CONTROL).send_keys(
+                    'c').key_up(Keys.CONTROL).perform()
+
+                RAW = Tk().clipboard_get()
+                Tk().clipboard_clear()
+
+                # Going Back
+                self.driver.find_element(
+                    By.ID, 'explore-cancel-doc-changes-btn').click()
+                wait(self.driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, '//*[@id="button-back" and @class="clickable"]')))
+                self.driver.find_element(By.ID, "button-back").click()
+
+                parser = etree.XMLParser(ns_clean=False)
+                xml = etree.fromstring(bytes(RAW, encoding='utf8'), parser)
+                return {"fileName": fileName, "xml": xml}
+
+        Log.err(f'File [{fileName}] not found')
+        return None
+
 
 class Report:
     def __init__(self):
@@ -400,3 +456,22 @@ def main(db1, db2, search):
 
 # start point
 main("SubDB", "FinalDB", "/claim*")
+
+
+# # testing
+# MLCLI = MarkLogicQConsole({
+#     "HEADLESS": HEADLESS,
+#     "SIMULATE_SLOWNESS": SIMULATE_SLOWNESS,
+#     "WEBDRIVER": WEBDRIVER,
+#     "BROWSER": BROWSER,
+#     "URL": URL,
+#     "USER": {
+#         "USERNAME": USERNAME,
+#         "PASSWORD": PASSWORD
+#     }
+# })
+
+# MLCLI.select_database("SubDB")
+# files = MLCLI.search("/claim*")
+# print(MLCLI.get_file_n(files[0]))
+# # MLCLI.close()
