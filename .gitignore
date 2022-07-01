@@ -3,3 +3,4 @@
 driver
 mock.xml
 env.yaml
+*.xlsx
